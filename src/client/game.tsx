@@ -295,37 +295,101 @@ const ResultCard = ({
   onPlayAgain: () => void;
 }) => {
   return (
-    <div
-      className={[
-        'rounded-xl p-4 flex flex-col items-center gap-2 text-center',
-        result.correct
-          ? 'bg-green-50 dark:bg-green-900/30'
-          : 'bg-red-50 dark:bg-red-900/30',
-      ].join(' ')}
-    >
-      <h2
+    <div className="flex flex-col gap-4">
+      <div
         className={[
-          'text-lg font-bold',
+          'rounded-xl p-4 flex flex-col items-center gap-2 text-center',
           result.correct
-            ? 'text-green-700 dark:text-green-300'
-            : 'text-red-700 dark:text-red-300',
+            ? 'bg-green-50 dark:bg-green-900/30'
+            : 'bg-red-50 dark:bg-red-900/30',
         ].join(' ')}
       >
-        {result.correct ? 'Case solved! 🎉' : 'Wrong suspect'}
-      </h2>
-      <p className="text-sm text-gray-700 dark:text-gray-200">
-        The culprit was <span className="font-semibold">{result.culpritName}</span>.
-      </p>
-      <p className="text-sm text-gray-600 dark:text-gray-300">
-        Score: <span className="font-semibold">{result.score}</span>
-      </p>
-      <button
-        className="mt-2 text-sm font-medium text-[#d93900] dark:text-orange-400 cursor-pointer"
-        onClick={onPlayAgain}
-      >
-        Play again
-      </button>
+        <h2
+          className={[
+            'text-lg font-bold',
+            result.correct
+              ? 'text-green-700 dark:text-green-300'
+              : 'text-red-700 dark:text-red-300',
+          ].join(' ')}
+        >
+          {result.correct ? 'Case solved! 🎉' : 'Wrong suspect'}
+        </h2>
+        <p className="text-sm text-gray-700 dark:text-gray-200">
+          The culprit was <span className="font-semibold">{result.culpritName}</span>.
+        </p>
+        {result.correct ? (
+          <p className="text-sm text-gray-600 dark:text-gray-300">
+            Score: <span className="font-semibold">{result.score}</span>
+          </p>
+        ) : (
+          result.solvabilityNote && (
+            <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed bg-white/60 dark:bg-black/20 rounded-lg p-3 text-left">
+              {result.solvabilityNote}
+            </p>
+          )
+        )}
+        <button
+          className="mt-2 text-sm font-medium text-[#d93900] dark:text-orange-400 cursor-pointer"
+          onClick={onPlayAgain}
+        >
+          Play again
+        </button>
+      </div>
+
+      <Leaderboard result={result} />
     </div>
+  );
+};
+
+const Leaderboard = ({
+  result,
+}: {
+  result: NonNullable<ReturnType<typeof useMystery>['result']>;
+}) => {
+  const { top, me } = result.leaderboard;
+  const meInTop = !!me && top.some((row) => row.userId === me.userId);
+
+  return (
+    <section className="bg-gray-50 dark:bg-gray-800 rounded-xl p-4 flex flex-col gap-2">
+      <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-200">
+        Leaderboard
+      </h2>
+
+      {top.length === 0 ? (
+        <p className="text-xs text-gray-400 dark:text-gray-500">
+          No scores yet — be the first!
+        </p>
+      ) : (
+        <ol className="flex flex-col gap-1">
+          {top.map((row) => (
+            <li
+              key={row.userId}
+              className={[
+                'flex items-center justify-between gap-2 text-sm px-2 py-1 rounded-lg',
+                me?.userId === row.userId
+                  ? 'bg-orange-50 dark:bg-orange-900/30 font-semibold text-[#d93900] dark:text-orange-300'
+                  : 'text-gray-700 dark:text-gray-200',
+              ].join(' ')}
+            >
+              <span className="truncate min-w-0">
+                {row.rank}. {row.username}
+              </span>
+              <span className="tabular-nums shrink-0">{row.total}</span>
+            </li>
+          ))}
+        </ol>
+      )}
+
+      {me && (
+        <div className="mt-1 pt-2 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between gap-2 text-xs text-gray-600 dark:text-gray-300">
+          <span className="truncate min-w-0">
+            You: {me.total} total
+            {!meInTop && me.percentile !== null && <> — Top {me.percentile}%</>}
+          </span>
+          <span className="tabular-nums shrink-0">This attempt: {result.score}</span>
+        </div>
+      )}
+    </section>
   );
 };
 

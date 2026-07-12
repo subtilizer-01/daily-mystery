@@ -121,13 +121,14 @@ export const useMystery = () => {
   }, []);
 
   const accuse = useCallback(async () => {
-    if (!state.selectedSuspectId || state.submitting || state.result) return;
+    if (!state.caseId || !state.selectedSuspectId || state.submitting || state.result) return;
     setState((prev) => ({ ...prev, submitting: true }));
     try {
       const res = await fetch('/api/accuse', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          caseId: state.caseId,
           suspectId: state.selectedSuspectId,
           cluesRevealed: state.cluesRevealed,
         }),
@@ -143,7 +144,7 @@ export const useMystery = () => {
         error: 'Failed to submit your guess.',
       }));
     }
-  }, [state.selectedSuspectId, state.submitting, state.result, state.cluesRevealed]);
+  }, [state.caseId, state.selectedSuspectId, state.submitting, state.result, state.cluesRevealed]);
 
   const playAgain = useCallback(() => {
     setState((prev) => ({

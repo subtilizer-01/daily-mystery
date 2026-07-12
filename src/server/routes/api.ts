@@ -1,5 +1,7 @@
 import { Hono } from 'hono';
-import { DAILY_CASE, getScore } from '../core/case';
+import { context } from '@devvit/web/server';
+import { getCaseById, getScore, getTodayCase } from '../core/case';
+import { getLeaderboard, recordScore } from '../core/leaderboard';
 import type {
   AccuseRequest,
   AccuseResponse,
@@ -14,22 +16,31 @@ type ErrorResponse = {
 export const api = new Hono();
 
 api.get('/case', (c) => {
+  const kase = getTodayCase();
   return c.json<CaseResponse>({
     type: 'case',
-    caseId: DAILY_CASE.id,
-    title: DAILY_CASE.title,
-    scenario: DAILY_CASE.scenario,
-    suspects: DAILY_CASE.suspects,
-    clues: DAILY_CASE.clues,
-    examSeconds: DAILY_CASE.examSeconds,
+    caseId: kase.id,
+    title: kase.title,
+    scenario: kase.scenario,
+    suspects: kase.suspects,
+    clues: kase.clues,
+    examSeconds: kase.examSeconds,
   });
 });
 
 api.post('/accuse', async (c) => {
   const body = await c.req.json<AccuseRequest>();
-  const { suspectId, cluesRevealed } = body;
+  const { caseId, suspectId, cluesRevealed } = body;
 
-  const accusedExists = DAILY_CASE.suspects.some((s) => s.id === suspectId);
+  const kase = getCaseById(caseId);
+  if (!kase) {
+    return c.json<ErrorResponse>(
+      { status: 'error', message: 'Unknown caseId' },
+      400
+    );
+  }
+
+  const accusedExists = kase.suspects.some((s) => s.id === suspectId);
   if (!suspectId || !accusedExists) {
     return c.json<ErrorResponse>(
       { status: 'error', message: 'A valid suspectId is required' },
@@ -37,16 +48,23 @@ api.post('/accuse', async (c) => {
     );
   }
 
-  const culprit = DAILY_CASE.suspects.find(
-    (s) => s.id === DAILY_CASE.culpritId
-  )!;
-  const correct = suspectId === DAILY_CASE.culpritId;
+  const culprit = kase.suspects.find((s) => s.id === kase.culpritId)!;
+  const correct = suspectId === kase.culpritId;
+  const score = correct ? getScore(cluesRevealed, kase.clues.length) : 0;
+
+  if (correct && context.userId) {
+    await recordScore(kase.id, context.userId, context.username ?? 'Anonymous', score);
+  }
+
+  const leaderboard = await getLeaderboard(context.userId, context.username);
 
   return c.json<AccuseResponse>({
     type: 'accuse',
     correct,
     culpritId: culprit.id,
     culpritName: culprit.name,
-    score: correct ? getScore(cluesRevealed, DAILY_CASE.clues.length) : 0,
+    score,
+    solvabilityNote: correct ? undefined : kase.solvabilityNote,
+    leaderboard,
   });
 });
