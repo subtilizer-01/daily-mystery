@@ -18,6 +18,7 @@ api.get('/case', (c) => {
     type: 'case',
     caseId: DAILY_CASE.id,
     title: DAILY_CASE.title,
+    scenario: DAILY_CASE.scenario,
     suspects: DAILY_CASE.suspects,
     clues: DAILY_CASE.clues,
     examSeconds: DAILY_CASE.examSeconds,
@@ -46,6 +47,6 @@ api.post('/accuse', async (c) => {
     correct,
     culpritId: culprit.id,
     culpritName: culprit.name,
-    score: correct ? getScore(cluesRevealed) : 0,
+    score: correct ? getScore(cluesRevealed, DAILY_CASE.clues.length) : 0,
   });
 });

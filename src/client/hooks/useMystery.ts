@@ -6,13 +6,14 @@ import type {
   Suspect,
 } from '../../shared/api';
 
-type Phase = 'examining' | 'clues';
+type Phase = 'scenario' | 'examining' | 'clues';
 
 type GameState = {
   loading: boolean;
   error: string | null;
   caseId: string | null;
   title: string;
+  scenario: string;
   suspects: Suspect[];
   clues: string[];
   phase: Phase;
@@ -29,9 +30,10 @@ const initialState: GameState = {
   error: null,
   caseId: null,
   title: '',
+  scenario: '',
   suspects: [],
   clues: [],
-  phase: 'examining',
+  phase: 'scenario',
   examSecondsTotal: 30,
   examSecondsLeft: 30,
   cluesRevealed: 0,
@@ -55,9 +57,10 @@ export const useMystery = () => {
           loading: false,
           caseId: data.caseId,
           title: data.title,
+          scenario: data.scenario,
           suspects: data.suspects,
           clues: data.clues,
-          phase: 'examining',
+          phase: 'scenario',
           examSecondsTotal: data.examSeconds,
           examSecondsLeft: data.examSeconds,
           cluesRevealed: 0,
@@ -72,6 +75,13 @@ export const useMystery = () => {
       }
     };
     void load();
+  }, []);
+
+  // Leaves the scenario briefing and starts the examination countdown.
+  const startInvestigation = useCallback(() => {
+    setState((prev) =>
+      prev.phase === 'scenario' ? { ...prev, phase: 'examining' } : prev
+    );
   }, []);
 
   // Examination countdown: ticks once a second while studying the suspects,
@@ -138,7 +148,7 @@ export const useMystery = () => {
   const playAgain = useCallback(() => {
     setState((prev) => ({
       ...prev,
-      phase: 'examining',
+      phase: 'scenario',
       examSecondsLeft: prev.examSecondsTotal,
       cluesRevealed: 0,
       selectedSuspectId: null,
@@ -146,5 +156,12 @@ export const useMystery = () => {
     }));
   }, []);
 
-  return { ...state, nextClue, selectSuspect, accuse, playAgain };
+  return {
+    ...state,
+    startInvestigation,
+    nextClue,
+    selectSuspect,
+    accuse,
+    playAgain,
+  };
 };

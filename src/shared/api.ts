@@ -1,16 +1,10 @@
-export type TraitKey =
-  | 'hasScar'
-  | 'wearsHat'
-  | 'wearsGlasses'
-  | 'hasRedEyes'
-  | 'holdsKnife';
-
-export type SuspectTraits = Record<TraitKey, boolean>;
-
 export type Suspect = {
   id: string;
   name: string;
-  traits: SuspectTraits;
+  // Character portrait, shown only during examination. Placeholder path for now.
+  imageUrl: string;
+  // What the suspect claims they were doing (their alibi/claim).
+  statement: string;
 };
 
 // Case creators pick how long the examination phase lasts.
@@ -20,6 +14,8 @@ export type CaseResponse = {
   type: 'case';
   caseId: string;
   title: string;
+  // The crime setup text shown before the investigation begins.
+  scenario: string;
   suspects: Suspect[];
   clues: string[];
   examSeconds: ExamDurationSeconds;

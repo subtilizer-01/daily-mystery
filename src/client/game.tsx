@@ -1,16 +1,34 @@
 import './index.css';
 
-import { StrictMode, type ReactNode } from 'react';
+import { StrictMode, useState, type ReactNode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { useMystery } from './hooks/useMystery';
-import { TRAITS } from './traits';
 import type { Suspect } from '../shared/api';
+
+type MascotState = 'neutral' | 'happy' | 'nervous' | 'cry' | 'cheerful';
+
+const MASCOT_SRC: Record<MascotState, string> = {
+  neutral: '/mascot/neutral.png',
+  happy: '/mascot/happy.png',
+  nervous: '/mascot/nervous.png',
+  cry: '/mascot/cry.png',
+  cheerful: '/mascot/cheerful.png',
+};
+
+const MASCOT_FALLBACK_EMOJI: Record<MascotState, string> = {
+  neutral: '🕵️',
+  happy: '🙂',
+  nervous: '😬',
+  cry: '😢',
+  cheerful: '🎉',
+};
 
 export const App = () => {
   const {
     loading,
     error,
     title,
+    scenario,
     suspects,
     clues,
     phase,
@@ -20,6 +38,7 @@ export const App = () => {
     selectedSuspectId,
     submitting,
     result,
+    startInvestigation,
     nextClue,
     selectSuspect,
     accuse,
@@ -29,6 +48,7 @@ export const App = () => {
   if (loading) {
     return (
       <Screen>
+        <Mascot state="neutral" />
         <p className="text-gray-600 dark:text-gray-300">Loading today's case…</p>
       </Screen>
     );
@@ -37,7 +57,35 @@ export const App = () => {
   if (error) {
     return (
       <Screen>
+        <Mascot state="neutral" />
         <p className="text-red-600 dark:text-red-400">{error}</p>
+      </Screen>
+    );
+  }
+
+  if (phase === 'scenario') {
+    return (
+      <Screen>
+        <div className="w-full max-w-md flex flex-col items-center gap-4 px-4 py-6 text-center">
+          <Mascot state="neutral" />
+          <header>
+            <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">
+              Daily Mystery
+            </h1>
+            <p className="text-sm text-gray-500 dark:text-gray-400">{title}</p>
+          </header>
+
+          <p className="text-sm text-gray-700 dark:text-gray-200 leading-relaxed">
+            {scenario}
+          </p>
+
+          <button
+            className="w-full bg-[#d93900] dark:bg-orange-600 text-white font-semibold rounded-full py-3 cursor-pointer transition-colors hover:bg-[#c23300] dark:hover:bg-orange-700"
+            onClick={startInvestigation}
+          >
+            Start Investigation
+          </button>
+        </div>
       </Screen>
     );
   }
@@ -46,6 +94,7 @@ export const App = () => {
     return (
       <Screen>
         <div className="w-full max-w-md flex flex-col gap-4 px-4 py-6">
+          <Mascot state="neutral" />
           <header className="text-center">
             <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">
               Daily Mystery
@@ -75,7 +124,7 @@ export const App = () => {
               <SuspectCard
                 key={suspect.id}
                 suspect={suspect}
-                showTraits
+                showImage
                 isSelected={false}
                 isCulpritReveal={false}
                 disabled
@@ -89,10 +138,19 @@ export const App = () => {
   }
 
   const allCluesRevealed = cluesRevealed >= clues.length;
+  const cluesRemaining = clues.length - cluesRevealed;
+  const mascotState: MascotState = result
+    ? result.correct
+      ? 'cheerful'
+      : 'cry'
+    : cluesRemaining <= 1
+      ? 'nervous'
+      : 'happy';
 
   return (
     <Screen>
       <div className="w-full max-w-md flex flex-col gap-5 px-4 py-6">
+        <Mascot state={mascotState} />
         <header className="text-center">
           <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">
             Daily Mystery
@@ -143,7 +201,7 @@ export const App = () => {
               <SuspectCard
                 key={suspect.id}
                 suspect={suspect}
-                showTraits={!!result}
+                showImage={!!result}
                 isSelected={selectedSuspectId === suspect.id}
                 isCulpritReveal={!!result && suspect.id === result.culpritId}
                 disabled={!!result}
@@ -171,14 +229,14 @@ export const App = () => {
 
 const SuspectCard = ({
   suspect,
-  showTraits,
+  showImage,
   isSelected,
   isCulpritReveal,
   disabled,
   onSelect,
 }: {
   suspect: Suspect;
-  showTraits: boolean;
+  showImage: boolean;
   isSelected: boolean;
   isCulpritReveal: boolean;
   disabled: boolean;
@@ -188,7 +246,7 @@ const SuspectCard = ({
     onClick={onSelect}
     disabled={disabled}
     className={[
-      'w-full flex items-center justify-between gap-2 px-3 py-2 rounded-lg border transition-colors cursor-pointer disabled:cursor-default',
+      'w-full flex items-center gap-3 px-3 py-2 rounded-lg border text-left transition-colors cursor-pointer disabled:cursor-default',
       isCulpritReveal
         ? 'border-green-500 bg-green-50 dark:bg-green-900/30'
         : isSelected
@@ -196,45 +254,36 @@ const SuspectCard = ({
           : 'border-gray-200 dark:border-gray-700',
     ].join(' ')}
   >
-    <div className="flex flex-col items-start min-w-0 shrink">
-      <span
-        className={[
-          'text-sm font-medium truncate',
-          isCulpritReveal
-            ? 'text-green-700 dark:text-green-300'
-            : 'text-gray-900 dark:text-gray-100',
-        ].join(' ')}
-      >
-        {suspect.name}
-      </span>
-      {isCulpritReveal && (
-        <span className="text-[10px] font-semibold text-green-700 dark:text-green-300">
-          🔍 culprit
-        </span>
-      )}
-    </div>
-
-    {showTraits && (
-      <div className="flex gap-1 shrink-0">
-        {TRAITS.map((trait) => {
-          const active = suspect.traits[trait.key];
-          return (
-            <span
-              key={trait.key}
-              title={`${trait.label}: ${active ? 'yes' : 'no'}`}
-              className={[
-                'flex items-center justify-center w-8 h-8 rounded-full text-lg leading-none transition-all',
-                active
-                  ? 'bg-white dark:bg-gray-900 ring-2 ring-[#d93900]/60 dark:ring-orange-500/60 opacity-100 scale-100'
-                  : 'bg-transparent opacity-20 grayscale scale-90',
-              ].join(' ')}
-            >
-              {trait.icon}
-            </span>
-          );
-        })}
-      </div>
+    {showImage && (
+      <PlaceholderImage
+        src={suspect.imageUrl}
+        alt={suspect.name}
+        fallbackEmoji="🕵️"
+        className="w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-800 shrink-0"
+      />
     )}
+    <div className="min-w-0 flex-1">
+      <div className="flex items-center justify-between gap-2">
+        <span
+          className={[
+            'text-sm font-medium truncate',
+            isCulpritReveal
+              ? 'text-green-700 dark:text-green-300'
+              : 'text-gray-900 dark:text-gray-100',
+          ].join(' ')}
+        >
+          {suspect.name}
+        </span>
+        {isCulpritReveal && (
+          <span className="text-[10px] font-semibold text-green-700 dark:text-green-300 shrink-0">
+            🔍 culprit
+          </span>
+        )}
+      </div>
+      <p className="text-xs text-gray-500 dark:text-gray-400 italic line-clamp-2">
+        “{suspect.statement}”
+      </p>
+    </div>
   </button>
 );
 
@@ -280,8 +329,54 @@ const ResultCard = ({
   );
 };
 
+const Mascot = ({ state }: { state: MascotState }) => (
+  <PlaceholderImage
+    src={MASCOT_SRC[state]}
+    alt={`Detective mascot (${state})`}
+    fallbackEmoji={MASCOT_FALLBACK_EMOJI[state]}
+    className="w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-800 mx-auto"
+    emojiSize="text-3xl"
+  />
+);
+
+// Renders an <img>, falling back to an emoji badge if the src 404s — lets us
+// wire up real art paths now and drop the files in later without breakage.
+const PlaceholderImage = ({
+  src,
+  alt,
+  fallbackEmoji,
+  className,
+  emojiSize = 'text-xl',
+}: {
+  src: string;
+  alt: string;
+  fallbackEmoji: string;
+  className: string;
+  emojiSize?: string;
+}) => {
+  const [broken, setBroken] = useState(false);
+  return (
+    <div
+      className={`flex items-center justify-center overflow-hidden ${className}`}
+    >
+      {broken ? (
+        <span className={emojiSize} role="img" aria-label={alt}>
+          {fallbackEmoji}
+        </span>
+      ) : (
+        <img
+          src={src}
+          alt={alt}
+          className="w-full h-full object-cover"
+          onError={() => setBroken(true)}
+        />
+      )}
+    </div>
+  );
+};
+
 const Screen = ({ children }: { children: ReactNode }) => (
-  <div className="flex flex-col justify-center items-center min-h-screen bg-white dark:bg-gray-900">
+  <div className="flex flex-col justify-center items-center min-h-screen bg-white dark:bg-gray-900 gap-3">
     {children}
   </div>
 );
