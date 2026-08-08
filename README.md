@@ -1,27 +1,39 @@
-## Devvit React Starter
+# Daily Mystery
 
-A starter to build web applications on Reddit's developer platform
+## Overview
+Daily Mystery is a deduction game you play inside Reddit. Each day presents a new
+crime: a short scenario, five suspects, and their alibis. You study the suspects
+under a timer, then reveal clues one at a time and accuse the culprit. The obvious
+suspect is not always guilty — you have to reason from the clues. The fewer clues
+you use before a correct accusation, the higher your score.
 
-- [Devvit](https://developers.reddit.com/): A way to build and deploy immersive games on Reddit
-- [Vite](https://vite.dev/): For compiling the webView
-- [React](https://react.dev/): For UI
-- [Hono](https://hono.dev/): For backend logic
-- [Tailwind](https://tailwindcss.com/): For styles
-- [TypeScript](https://www.typescriptlang.org/): For type safety
+Players climb a leaderboard based on their total score across cases. There is also
+a case creator: players can build their own mystery — pick suspects, write the
+statements and clues, mark the culprit — and share it for other players to solve.
 
-## Getting Started
+**Who it's for:** anyone who enjoys short daily puzzle games like Wordle, or
+detective/deduction games. No account setup needed beyond Reddit.
 
-> Make sure you have Node 22 downloaded on your machine before running!
+**Critical operational notes:** the game runs entirely within a Reddit post. Player
+progress, scores, and community-created cases are stored using Devvit's built-in
+Redis. A player's own created case does not add to their leaderboard score (to
+prevent self-scoring).
 
-1. Run `npm create devvit@latest --template=react`
-2. Go through the installation wizard. You will need to create a Reddit account and connect it to Reddit developers
-3. Copy the command on the success page into your terminal
+## How to configure and deploy
+1. Install Node.js (v22.2.0 or later).
+2. Clone the project and run `npm install`.
+3. Log in with `npx devvit login`.
+4. Test locally with `npm run dev`, which installs the app on a test subreddit and
+   opens a playtest URL.
+5. Publish for review with `npx devvit publish`.
+6. Once approved, install the app on a subreddit you moderate to create a game post.
 
-## Commands
-
-- `npm run dev`: Starts a development server where you can develop your application live on Reddit.
-- `npm run build`: Builds your client and server projects
-- `npm run deploy`: Uploads a new version of your app
-- `npm run launch`: Publishes your app for review
-- `npm run login`: Logs your CLI into Reddit
-- `npm run type-check`: Type checks, lints, and prettifies your app
+## How to play (full feature set)
+- **Start Investigation:** read the crime scenario, then study the five suspects and
+  their statements during the examination timer (you can skip when ready).
+- **Reveal clues:** clues appear one at a time. Fewer clues used = higher score.
+- **Accuse:** pick the suspect you believe is guilty. The solution is revealed after,
+  win or lose, so you can see the reasoning.
+- **Leaderboard:** your total score ranks you against other players.
+- **Create Your Own Mystery:** build a case from the suspect library and share it.
+- **Play community cases:** solve mysteries created by other players.

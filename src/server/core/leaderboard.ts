@@ -1,10 +1,29 @@
 import { redis } from '@devvit/web/server';
 import type { LeaderboardResult } from '../../shared/api';
+import { CASES } from './cases';
 
 const TOP_N = 10;
 const LEADERBOARD_KEY = 'leaderboard:total';
 const USERNAMES_KEY = 'usernames';
 const bestScoreKey = (caseId: string) => `bestScore:${caseId}`;
+
+// Case ids from every case set this app has ever shipped (not just the
+// current CASES). Kept so a reset can wipe per-case best-score hashes left
+// behind by a since-replaced case file, not just the currently active ids.
+const RETIRED_CASE_IDS = [
+  'case-1-greenhouse',
+  'case-2-poisoned-cake',
+  'case-3-smudged-glass',
+  'case-4-jammed-vault',
+  'case-5-erased-footage',
+  'case-6-harbor-smoke',
+  'case-7-lifted-wallet',
+  'case-8-insurance-swap',
+  'case-9-missing-page',
+  'case-10-clock-tower',
+  'case-11-dropped-fan',
+  'case-12-inside-job',
+];
 
 // Records `score` as the player's result for `caseId`, but only if it beats
 // their previous best for that case — replaying a solved case never adds to
@@ -26,6 +45,14 @@ export async function recordScore(
   await redis.hSet(key, { [userId]: String(score) });
   await redis.hSet(USERNAMES_KEY, { [userId]: username });
   await redis.zIncrBy(LEADERBOARD_KEY, userId, score - prevBest);
+}
+
+// Wipes the leaderboard total, the username lookup, and every case's
+// best-score hash (current and retired case ids), so old scores never
+// resurface and every player starts back at 0.
+export async function resetLeaderboard(): Promise<void> {
+  const caseIds = new Set([...RETIRED_CASE_IDS, ...CASES.map((kase) => kase.id)]);
+  await redis.del(LEADERBOARD_KEY, USERNAMES_KEY, ...[...caseIds].map(bestScoreKey));
 }
 
 export async function getLeaderboard(

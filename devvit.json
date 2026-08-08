@@ -32,11 +32,26 @@
         "location": "subreddit",
         "forUserType": "moderator",
         "endpoint": "/internal/menu/example-form"
+      },
+      {
+        "label": "Reset leaderboard",
+        "description": "Clear all stored scores and leaderboard totals",
+        "location": "subreddit",
+        "forUserType": "moderator",
+        "endpoint": "/internal/menu/reset-leaderboard"
+      },
+      {
+        "label": "Review reported cases",
+        "description": "Dismiss or remove community cases that players have reported",
+        "location": "subreddit",
+        "forUserType": "moderator",
+        "endpoint": "/internal/menu/review-reported-cases"
       }
     ]
   },
   "forms": {
-    "exampleForm": "/internal/form/example-submit"
+    "exampleForm": "/internal/form/example-submit",
+    "reviewReportedCases": "/internal/form/review-reported-cases"
   },
   "triggers": {
     "onAppInstall": "/internal/triggers/on-app-install"

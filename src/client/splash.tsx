@@ -5,48 +5,49 @@ import { context, requestExpandedMode } from '@devvit/web/client';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 
+// Solid fill sampled from the banner artwork's own dark-navy border, so the
+// flat area around it reads as part of the image rather than empty space.
+const BANNER_EDGE_COLOR = '#1b213c';
+
 export const Splash = () => {
   return (
-    <div className="flex relative flex-col justify-center items-center min-h-screen gap-4 bg-white dark:bg-gray-900">
+    <div
+      className="flex relative flex-col justify-center items-center min-h-screen w-full gap-5 py-10"
+      style={{ backgroundColor: BANNER_EDGE_COLOR }}
+    >
       <img
-        className="object-contain w-1/2 max-w-[250px] mx-auto"
+        className="w-full object-contain"
         src="/snoo.png"
-        alt="Snoo"
+        alt="Daily Mystery — a new case every day, can you crack it?"
       />
-      <div className="flex flex-col items-center gap-2">
-        <h1 className="text-2xl font-bold text-center text-gray-900 dark:text-white">
-          Daily Mystery
-        </h1>
-        <p className="text-base text-center text-gray-600 dark:text-gray-300">
-          A new case, {context.username ?? 'detective'}. Can you find the
-          culprit before you run out of clues?
+      <div className="flex flex-col items-center gap-3 px-4">
+        <p className="text-sm text-center text-gray-200">
+          Can you find the culprit, {context.username ?? 'detective'}?
         </p>
-      </div>
-      <div className="flex items-center justify-center mt-5">
         <button
-          className="flex items-center justify-center bg-[#d93900] dark:bg-orange-600 text-white w-auto h-10 rounded-full cursor-pointer transition-colors px-4 hover:bg-[#c23300] dark:hover:bg-orange-700"
+          className="flex items-center justify-center bg-[#d93900] dark:bg-orange-600 text-white w-auto h-10 rounded-full cursor-pointer transition-colors px-6 hover:bg-[#c23300] dark:hover:bg-orange-700"
           onClick={(e) => requestExpandedMode(e.nativeEvent, 'game')}
         >
           Tap to Start
         </button>
       </div>
-      <footer className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-3 text-[0.8em] text-gray-600 dark:text-gray-400">
+      <footer className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-3 text-[0.8em] text-gray-400">
         <button
-          className="cursor-pointer hover:text-gray-900 dark:hover:text-white transition-colors"
+          className="cursor-pointer hover:text-white transition-colors"
           onClick={() => navigateTo('https://developers.reddit.com/docs')}
         >
           Docs
         </button>
-        <span className="text-gray-300 dark:text-gray-600">|</span>
+        <span className="text-gray-600">|</span>
         <button
-          className="cursor-pointer hover:text-gray-900 dark:hover:text-white transition-colors"
+          className="cursor-pointer hover:text-white transition-colors"
           onClick={() => navigateTo('https://www.reddit.com/r/Devvit')}
         >
           r/Devvit
         </button>
-        <span className="text-gray-300 dark:text-gray-600">|</span>
+        <span className="text-gray-600">|</span>
         <button
-          className="cursor-pointer hover:text-gray-900 dark:hover:text-white transition-colors"
+          className="cursor-pointer hover:text-white transition-colors"
           onClick={() => navigateTo('https://discord.com/invite/R7yu2wh9Qz')}
         >
           Discord
